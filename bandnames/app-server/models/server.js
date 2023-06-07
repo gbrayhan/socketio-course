@@ -8,7 +8,7 @@ const Sockets = require('./sockets');
 class Server {
     constructor() {
         this.app = express();
-        this.port = process.env.PORT || 3000;
+        this.port = process.env.PORT || 5001;
         this.server = http.createServer(this.app);
 
         this.io = socketio(this.server, { /* configuraciones */});

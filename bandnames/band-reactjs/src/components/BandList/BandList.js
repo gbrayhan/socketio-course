@@ -1,6 +1,7 @@
-import React, {useEffect, useState} from "react";
+import React, {useContext, useEffect, useState} from "react";
 import TrashIcon from '@rsuite/icons/Trash';
 import {Button, IconButton, Input, Table} from "rsuite";
+import {SocketContext} from "../../context/SocketContext";
 
 
 const EditableCell = ({rowData, dataKey, onChange, ...props}) => {
@@ -37,21 +38,42 @@ const ActionCell = ({rowData, dataKey, onClick, ...props}) => {
     );
 };
 
-const BandList = ({dataBands, actions}) => {
+const BandList = () => {
+    // use context
+    const {socket} = useContext(SocketContext);
 
     const [data, setData] = useState([]);
     const [timerId, setTimerId] = useState();
 
 
     useEffect(() => {
-        setData(dataBands);
-    }, [dataBands]);
+        socket?.on('current-bands', (dataBand) => {
+            debugger
+            setData(dataBand)
+        });
+
+        return () => socket?.off('current-bands');
+    }, [socket]);
+
 
     useEffect(() => {
         return () => {
             clearTimeout(timerId); // Clean up on component unmount
         };
     }, [timerId]);
+
+    const socketChangeName = (id, name) => {
+        socket?.emit('change-band-name', {id, name});
+    };
+
+    const socketVote = (id) => {
+        debugger
+        socket?.emit('vote-band', {id});
+    };
+
+    const socketDeleteBand = (id) => {
+        socket?.emit('delete-band', {id});
+    };
 
     const handleChange = (id, key, value) => {
         clearTimeout(timerId);
@@ -61,6 +83,8 @@ const BandList = ({dataBands, actions}) => {
             setData(nextData);
         }, 1000));
     };
+
+
     const handleEditState = id => {
         const nextData = Object.assign([], data);
         const activeItem = nextData.find(item => item.id === id);
@@ -69,7 +93,7 @@ const BandList = ({dataBands, actions}) => {
 
         if (activeItem.status === null) {
             console.log("event triggered from react component", activeItem.name)
-            actions.changeName(activeItem.id, activeItem.name);
+            socketChangeName(activeItem.id, activeItem.name);
         }
     };
 
@@ -90,7 +114,7 @@ const BandList = ({dataBands, actions}) => {
                         {(rowData) => {
                             return (
                                 <button className="btn btn-primary" onClick={() => {
-                                    actions.vote(rowData.id)
+                                    socketVote(rowData.id)
                                 }}>+</button>
                             )
                         }}
@@ -102,7 +126,7 @@ const BandList = ({dataBands, actions}) => {
                         {(rowData) => {
                             return (
                                 <IconButton size={"xs"} icon={<TrashIcon/>} onClick={() => {
-                                    actions.deleteBand(rowData.id)
+                                    socketDeleteBand(rowData.id)
                                 }}/>
                             )
                         }}

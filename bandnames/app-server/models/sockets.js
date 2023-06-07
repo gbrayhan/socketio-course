@@ -20,6 +20,8 @@ class Sockets {
             socket.on('vote-band', (id) => {
                 this.bandList.increaseVotes(id);
                 this.io.emit('current-bands', this.bandList.getBands());
+                console.log('vote-band', id)
+                console.log('current-bands', this.bandList.getBands())
             });
 
             // add-band
